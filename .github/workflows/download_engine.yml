@@ -61,4 +61,24 @@ jobs:
       - name: Send Webhook Notification
         if: always()
         run: |
-          python3 -c "import urllib.request, json, os; chat_id='${{ github.event.client_payload.chat_id }}'; chat_id = '8147031843' if (not chat_id or chat_id=='None') else chat_id; webhook_url='${{ github.event.client_payload.webhook_url }}'; webhook_url = 'https://gitcloud.modern-tools.ir/webhook/github-done' if (not webhook_url or webhook_url=='None') else webhook_url; repo='${{ github.repository }}'; tag_name='file-${{ github.run_number }}-${{ github.run_id }}'; download_link=f'https://github.com/{repo}/releases/download/{tag_name}/downloaded_file.mp4'; file_size=f'{os.path.getsize("downloaded_file.mp4")/(1024*1024):.2f} MB' if os.path.exists('downloaded_file.mp4') else 'N/A'; payload={'chat_id': str(chat_id), 'duration': '45', 'file_size': file_size, 'download_link': download_link}; req=urllib.request.Request(webhook_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}); res=urllib.request.urlopen(req); print('✅ Webhook sent! Status:', res.status)"
+          python3 - << 'EOF'
+          import urllib.request, json, os
+          try:
+              chat_id = '${{ github.event.client_payload.chat_id }}'
+              if not chat_id or chat_id == 'None':
+                  chat_id = '8147031843'
+              webhook_url = '${{ github.event.client_payload.webhook_url }}'
+              if not webhook_url or webhook_url == 'None':
+                  webhook_url = 'https://gitcloud.modern-tools.ir/webhook/github-done'
+              repo = '${{ github.repository }}'
+              tag_name = 'file-${{ github.run_number }}-${{ github.run_id }}'
+              download_link = f'https://github.com/{repo}/releases/download/{tag_name}/downloaded_file.mp4'
+              file_size = f'{os.path.getsize("downloaded_file.mp4")/(1024*1024):.2f} MB' if os.path.exists('downloaded_file.mp4') else 'N/A'
+              payload = {'chat_id': str(chat_id), 'duration': '45', 'file_size': file_size, 'download_link': download_link}
+              data = json.dumps(payload).encode('utf-8')
+              req = urllib.request.Request(webhook_url, data=data, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+              res = urllib.request.urlopen(req, timeout=15)
+              print('✅ Webhook sent successfully! Status:', res.status)
+          except Exception as e:
+              print('❌ Webhook error:', e)
+          EOF
